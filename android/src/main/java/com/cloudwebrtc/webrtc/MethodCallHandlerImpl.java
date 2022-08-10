@@ -355,7 +355,7 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
         mediaStreamAddTrack(streamId, trackId, result);
         for (int i = 0; i < renders.size(); i++) {
           FlutterRTCVideoRenderer renderer = renders.get(i);
-          if (renderer.checkMediaStream(streamId)) {
+          if (renderer != null && renderer.checkMediaStream(streamId)) {
             renderer.setVideoTrack((VideoTrack) localTracks.get(trackId));
           }
         }
@@ -367,7 +367,7 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
         mediaStreamRemoveTrack(streamId, trackId, result);
         for (int i = 0; i < renders.size(); i++) {
           FlutterRTCVideoRenderer renderer = renders.get(i);
-          if (renderer.checkVideoTrack(trackId)) {
+          if (renderer != null && renderer.checkMediaStream(streamId) && renderer.checkVideoTrack(trackId)) {
             renderer.setVideoTrack(null);
           }
         }
@@ -375,7 +375,7 @@ public class MethodCallHandlerImpl implements MethodCallHandler, StateProvider {
       }
       case "trackDispose": {
         String trackId = call.argument("trackId");
-        localTracks.remove(trackId);
+        mediaStreamTrackStop(trackId);
         result.success(null);
         break;
       }
