@@ -346,6 +346,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
 
     if (videoDevice) {
         RTCVideoSource *videoSource = [self.peerConnectionFactory videoSource];
+        [videoSource adaptOutputFormatToWidth:self._targetWidth height:self._targetHeight fps:self._targetFps];
         if (self.videoCapturer) {
             [self.videoCapturer stopCapture];
         }
@@ -668,14 +669,28 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     for (AVCaptureDeviceFormat *format in formats) {
         CMVideoDimensions dimension = CMVideoFormatDescriptionGetDimensions(format.formatDescription);
         FourCharCode pixelFormat = CMFormatDescriptionGetMediaSubType(format.formatDescription);
-        int diff = abs(self._targetWidth - dimension.width) + abs(self._targetHeight - dimension.height);
-        if (diff < currentDiff) {
-            selectedFormat = format;
-            currentDiff = diff;
-        } else if (diff == currentDiff && pixelFormat == [self.videoCapturer preferredOutputPixelFormat]) {
-            selectedFormat = format;
+        if(self._targetHeight == self._targetWidth){
+            int diff = dimension.height - self._targetHeight;
+            //NSLog(@"!!!FORMAT res %ix%i %i %s!!!", dimension.width, dimension.height, diff, (diff < currentDiff) ? "t" : "f");
+            if(diff > 0 && diff < currentDiff && currentDiff != diff){
+                //NSLog(@"!!!FORMAT res %ix%i OK!!!", dimension.width, dimension.height);
+                selectedFormat = format;
+                currentDiff = diff;
+            }else if(diff == currentDiff && pixelFormat == [self.videoCapturer preferredOutputPixelFormat]){
+                //NSLog(@"!!!FORMAT res %ix%i BOK!!!", dimension.width, dimension.height);
+                selectedFormat = format;
+            }
+        }else{
+            int diff = abs(self._targetWidth - dimension.width) + abs(self._targetHeight - dimension.height);
+            if (diff < currentDiff) {
+                selectedFormat = format;
+                currentDiff = diff;
+            } else if (diff == currentDiff && pixelFormat == [self.videoCapturer preferredOutputPixelFormat]) {
+                selectedFormat = format;
+            }
         }
     }
+
     return selectedFormat;
 }
 
