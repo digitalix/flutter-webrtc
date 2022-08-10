@@ -11,6 +11,9 @@ import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 import com.cloudwebrtc.webrtc.MethodCallHandlerImpl.AudioManager;
 import com.cloudwebrtc.webrtc.utils.RTCAudioManager;
+
+import org.webrtc.Logging;
+
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.plugins.FlutterPlugin;
 import io.flutter.embedding.engine.plugins.activity.ActivityAware;
@@ -45,6 +48,7 @@ public class FlutterWebRTCPlugin implements FlutterPlugin, ActivityAware {
      */
     public static void registerWith(Registrar registrar) {
         final FlutterWebRTCPlugin plugin = new FlutterWebRTCPlugin();
+        Logging.enableLogToDebugOutput(Logging.Severity.LS_INFO);
 
         plugin.startListening(registrar.context(), registrar.messenger(), registrar.textures());
 
