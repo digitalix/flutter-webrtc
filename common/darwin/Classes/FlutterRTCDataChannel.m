@@ -157,13 +157,10 @@
 
     FlutterEventSink eventSink = channel.eventSink;
     if(eventSink) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-                       eventSink(@{ @"event" : @"dataChannelReceiveMessage",
-                                            @"id": [NSNumber numberWithInt:channel.channelId],
-                                            @"type": type,
-                                            @"data": (data ? data : [NSNull null])});
-        });
-
+        eventSink(@{ @"event" : @"dataChannelReceiveMessage",
+                     @"id": [NSNumber numberWithInt:channel.channelId],
+                     @"type": type,
+                     @"data": (data ? data : [NSNull null])});
     }
 }
 
