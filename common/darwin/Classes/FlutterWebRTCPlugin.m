@@ -365,7 +365,7 @@
                 [self.localTracks removeObjectForKey:track.trackId];
                 RTCVideoTrack *videoTrack = (RTCVideoTrack *)track;
                 RTCVideoSource *source = videoTrack.source;
-                if(source){
+                if(source && [track.trackId isEqualToString:self._localVideoTrackUUID]){
                     shouldCallResult = NO;
                     [self.videoCapturer stopCaptureWithCompletionHandler:^{
                       result(nil);
@@ -439,7 +439,18 @@
     } else if ([@"trackDispose" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
         NSString* trackId = argsMap[@"trackId"];
+        RTCMediaStreamTrack *track = [self trackForId: trackId];
         [self.localTracks removeObjectForKey:trackId];
+
+        if ([track isKindOfClass:[RTCVideoTrack class]]){
+            RTCVideoTrack *videoTrack = (RTCVideoTrack *)track;
+            RTCVideoSource *source = videoTrack.source;
+            if(source && [trackId isEqualToString:self._localVideoTrackUUID]){
+                [self.videoCapturer stopCaptureWithCompletionHandler:^{}];
+                self.videoCapturer = nil;
+            }
+        }
+
         result(nil);
     } else if ([@"restartIce" isEqualToString:call.method]){
         NSDictionary* argsMap = call.arguments;
@@ -562,6 +573,9 @@
         NSString* trackId = argsMap[@"trackId"];
         NSNumber* volume = argsMap[@"volume"];
         RTCMediaStreamTrack *track = self.localTracks[trackId];
+        if(track == nil){
+            track = [self trackForId:trackId];
+        }
         if (track != nil && [track isKindOfClass:[RTCAudioTrack class]]) {
             RTCAudioTrack *audioTrack = (RTCAudioTrack *)track;
             RTCAudioSource *audioSource = audioTrack.source;
@@ -1550,7 +1564,7 @@
     if(encodingsParams != nil) {
         NSMutableArray<RTCRtpEncodingParameters *> *sendEncodings = [[NSMutableArray alloc] init];
         for (NSDictionary* map in encodingsParams){
-            [sendEncodings insertObject:[self mapToEncoding:map] atIndex:0];
+            [sendEncodings addObject:[self mapToEncoding:map]];
         }
         [init setSendEncodings:sendEncodings];
     }
@@ -1643,10 +1657,8 @@
             return @"recvonly";
         case RTCRtpTransceiverDirectionInactive:
             return @"inactive";
-#if TARGET_OS_IPHONE
         case RTCRtpTransceiverDirectionStopped:
             return @"stopped";
-#endif
                break;
        }
     return nil;

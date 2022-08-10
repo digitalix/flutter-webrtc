@@ -27,6 +27,7 @@
 @property (nonatomic) int _targetWidth;
 @property (nonatomic) int _targetHeight;
 @property (nonatomic) int _targetFps;
+@property (nonatomic) NSString *_localVideoTrackUUID;
 
 - (RTCMediaStream*)streamForId:(NSString*)streamId peerConnectionId:(NSString *)peerConnectionId;
 - (NSDictionary*)mediaStreamToMap:(RTCMediaStream *)stream ownerTag:(NSString*)ownerTag;

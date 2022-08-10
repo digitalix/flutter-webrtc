@@ -363,6 +363,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         RTCVideoTrack *videoTrack = [self.peerConnectionFactory videoTrackWithSource:videoSource trackId:trackUUID];
         [mediaStream addVideoTrack:videoTrack];
 
+        self._localVideoTrackUUID = trackUUID;
         successCallback(mediaStream);
     } else {
         // According to step 6.2.3 of the getUserMedia() algorithm, if there is no
@@ -496,6 +497,9 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     [screenCapturer startCapture];
 
     //TODO:
+    if (self.videoCapturer) {
+        [self.videoCapturer stopCapture];
+    }
     self.videoCapturer = screenCapturer;
 
     NSString *trackUUID = [[NSUUID UUID] UUIDString];
@@ -510,6 +514,7 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
         [videoTracks addObject:@{@"id": track.trackId, @"kind": track.kind, @"label": track.trackId, @"enabled": @(track.isEnabled), @"remote": @(YES), @"readyState": @"live"}];
     }
 
+    self._localVideoTrackUUID = trackUUID;
     self.localStreams[mediaStreamId] = mediaStream;
     result(@{@"streamId": mediaStreamId, @"audioTracks" : audioTracks, @"videoTracks" : videoTracks });
 }
