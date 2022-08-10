@@ -1,6 +1,42 @@
 # Changelog
 
 --------------------------------------------
+[0.9.2] - 2022-08-09
+
+* [Android] update libwebrtc to com.github.webrtc-sdk:android:104.5112.01.
+* [iOS/macOS] update WebRTC-SDK to 104.5112.02.
+* [Windows] update libwebrtc.dll to 104.5112.02.
+
+[0.9.0] - 2022-07-27
+
+* [macOS] Added screen-sharing support for macOS
+* [Windows] Added screen-sharing support for Windows
+* [iOS/macOS] fix: Fix compile warning for Darwin
+* [Darwin/Android/Windows] fix: Fix typo peerConnectoinEvent -> peerConnectionEvent for EventChannel name (#1019)
+
+[0.8.12] - 2022-07-15
+
+* [Darwin]: fix: camera release.
+
+[0.8.11] - 2022-07-11
+
+* [Windows] Fix variant exception of findLongInt. (#990)
+* [Windows] fix unable to get username/credential when parsing iceServers containing urls
+* [iOS] Fix RTCAudioSession properties set with libwebrtc m97, Fixes #987.
+
+[0.8.10] - 2022-06-28
+
+* [iOS] IPC Broadcast Upload Extension support for Screenshare
+
+[0.8.9] - 2022-06-08
+
+* [Android] Fixes DataChannel issue described in #974
+* [iOS] Fixes DataChannel issue described in #974
+* [Dawrin/Android/Windows] Split data channel's webrtc id from our internal id (#961)
+* [Windows] Update to m97.
+* [Windows] Add PeerConnectionState
+* [Windows] Fix can't open mic alone when built-in AEC is enabled.
+
 [0.8.8] - 2022-05-31
 
 * [Android] Added onBufferedAmountChange callback which will return currentBuffer and changedBuffer and implemented bufferedAmount.

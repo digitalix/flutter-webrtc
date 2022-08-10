@@ -7,10 +7,6 @@
 #import "FlutterRTCPeerConnection.h"
 #import "AudioUtils.h"
 
-#if TARGET_OS_IPHONE
-#import "FlutterRPScreenRecorder.h"
-#endif
-
 @implementation AVCaptureDevice (Flutter)
 
 - (NSString*)positionString {
@@ -307,21 +303,21 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
     if(mandatory && [mandatory isKindOfClass:[NSDictionary class]])
     {
         id widthConstraint = mandatory[@"minWidth"];
-        if ([widthConstraint isKindOfClass:[NSString class]]) {
+        if ([widthConstraint isKindOfClass:[NSString class]] || [widthConstraint isKindOfClass:[NSNumber class]]) {
             int possibleWidth = [widthConstraint intValue];
             if (possibleWidth != 0) {
                 self._targetWidth = possibleWidth;
             }
         }
         id heightConstraint = mandatory[@"minHeight"];
-        if ([heightConstraint isKindOfClass:[NSString class]]) {
+        if ([heightConstraint isKindOfClass:[NSString class]] || [heightConstraint isKindOfClass:[NSNumber class]]) {
             int possibleHeight = [heightConstraint intValue];
             if (possibleHeight != 0) {
                 self._targetHeight = possibleHeight;
             }
         }
         id fpsConstraint = mandatory[@"minFrameRate"];
-        if ([fpsConstraint isKindOfClass:[NSString class]]) {
+        if ([fpsConstraint isKindOfClass:[NSString class]] || [fpsConstraint isKindOfClass:[NSNumber class]]) {
             int possibleFps = [fpsConstraint intValue];
             if (possibleFps != 0) {
                 self._targetFps = possibleFps;
@@ -357,9 +353,15 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
                 NSLog(@"Start capture error: %@", [error localizedDescription]);
             }
         }];
-
         NSString *trackUUID = [[NSUUID UUID] UUIDString];
         RTCVideoTrack *videoTrack = [self.peerConnectionFactory videoTrackWithSource:videoSource trackId:trackUUID];
+        
+        __weak RTCCameraVideoCapturer* capturer = self.videoCapturer;
+        self.videoCapturerStopHandlers[videoTrack.trackId] = ^(CompletionHandler handler) {
+            NSLog(@"Stop video capturer, trackID %@", videoTrack.trackId);
+            [capturer stopCaptureWithCompletionHandler:handler];
+        };
+        
         [mediaStream addVideoTrack:videoTrack];
 
         successCallback(mediaStream);
@@ -483,36 +485,6 @@ typedef void (^NavigatorUserMediaSuccessCallback)(RTCMediaStream *mediaStream);
 #endif
 }
 
-#if TARGET_OS_IPHONE
--(void)getDisplayMedia:(NSDictionary *)constraints
-                result:(FlutterResult)result {
-    NSString *mediaStreamId = [[NSUUID UUID] UUIDString];
-    RTCMediaStream *mediaStream = [self.peerConnectionFactory mediaStreamWithStreamId:mediaStreamId];
-
-    RTCVideoSource *videoSource = [self.peerConnectionFactory videoSource];
-    FlutterRPScreenRecorder *screenCapturer = [[FlutterRPScreenRecorder alloc] initWithDelegate:videoSource];
-
-    [screenCapturer startCapture];
-
-    //TODO:
-    self.videoCapturer = screenCapturer;
-
-    NSString *trackUUID = [[NSUUID UUID] UUIDString];
-    RTCVideoTrack *videoTrack = [self.peerConnectionFactory videoTrackWithSource:videoSource trackId:trackUUID];
-    [mediaStream addVideoTrack:videoTrack];
-
-    NSMutableArray *audioTracks = [NSMutableArray array];
-    NSMutableArray *videoTracks = [NSMutableArray array];
-
-    for (RTCVideoTrack *track in mediaStream.videoTracks) {
-        [self.localTracks setObject:track forKey:track.trackId];
-        [videoTracks addObject:@{@"id": track.trackId, @"kind": track.kind, @"label": track.trackId, @"enabled": @(track.isEnabled), @"remote": @(YES), @"readyState": @"live"}];
-    }
-
-    self.localStreams[mediaStreamId] = mediaStream;
-    result(@{@"streamId": mediaStreamId, @"audioTracks" : audioTracks, @"videoTracks" : videoTracks });
-}
-#endif
 -(void)createLocalMediaStream:(FlutterResult)result{
     NSString *mediaStreamId = [[NSUUID UUID] UUIDString];
     RTCMediaStream *mediaStream = [self.peerConnectionFactory mediaStreamWithStreamId:mediaStreamId];

@@ -357,12 +357,12 @@ void FlutterMediaStream::MediaStreamGetTracks(
       info[EncodableValue("enabled")] = EncodableValue(track->enabled());
       info[EncodableValue("remote")] = EncodableValue(true);
       info[EncodableValue("readyState")] = "live";
-      videoTracks.push_back(EncodableValue("info"));
+      videoTracks.push_back(EncodableValue(info));
     }
 
     params[EncodableValue("videoTracks")] = EncodableValue(videoTracks);
 
-    result->Success(EncodableValue("params"));
+    result->Success(EncodableValue(params));
   } else {
     result->Error("MediaStreamGetTracksFailed",
                   "MediaStreamGetTracks() media stream is null !");
@@ -396,17 +396,50 @@ void FlutterMediaStream::MediaStreamDispose(
   result->Success();
 }
 
+void FlutterMediaStream::CreateLocalMediaStream(
+    std::unique_ptr<MethodResult<EncodableValue>> result) {
+  std::string uuid = base_->GenerateUUID();
+  scoped_refptr<RTCMediaStream> stream =
+      base_->factory_->CreateStream(uuid.c_str());
+
+  EncodableMap params;
+  params[EncodableValue("streamId")] = EncodableValue(uuid);
+
+  base_->local_streams_[uuid] = stream;
+  result->Success(EncodableValue(params));
+}
+
 void FlutterMediaStream::MediaStreamTrackSetEnable(
     const std::string& track_id,
-    std::unique_ptr<MethodResult<EncodableValue>> result) {}
+    std::unique_ptr<MethodResult<EncodableValue>> result) {
+    result->Success();
+}
 
 void FlutterMediaStream::MediaStreamTrackSwitchCamera(
     const std::string& track_id,
-    std::unique_ptr<MethodResult<EncodableValue>> result) {}
+    std::unique_ptr<MethodResult<EncodableValue>> result) {
+      result->Success();
+}
 
 void FlutterMediaStream::MediaStreamTrackDispose(
     const std::string& track_id,
     std::unique_ptr<MethodResult<EncodableValue>> result) {
+    for (auto it : base_->local_streams_) {
+      auto stream = it.second;
+      auto audio_tracks = stream->audio_tracks();
+      for (auto track : audio_tracks.std_vector()) {
+        if(track->id().std_string() == track_id) {
+          stream->RemoveTrack(track);
+        }
+      }
+      auto video_tracks = stream->video_tracks();
+      for (auto track : video_tracks.std_vector()) {
+        if(track->id().std_string() == track_id) {
+          stream->RemoveTrack(track);
+        }
+      }
+    }
+    base_->RemoveMediaTrackForId(track_id);
     result->Success();
 }
 }  // namespace flutter_webrtc_plugin
